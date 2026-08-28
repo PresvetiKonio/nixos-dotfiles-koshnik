@@ -110,6 +110,7 @@ seat seat0 hide_cursor 5000
 
 # Applauncher
 bindsym $mod+w exec librewolf
+bindsym $mod+b exec brave
 bindsym $mod+s exec spotify
 bindsym $mod+i exec steam -silent -applaunch 250900
 
@@ -180,7 +181,7 @@ bindsym $mod+d exec $menu
 bindsym $mod+q kill
 bindsym $mod+Shift+c reload
 #bindsym $mod+Shift+e exit
-bindsym $mod+b splith
+#bindsym $mod+b splith
 bindsym $mod+v splitv
 
 bindsym $mod+Shift+Alt+l exec $lock
