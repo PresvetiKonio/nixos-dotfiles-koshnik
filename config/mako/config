@@ -1,0 +1,12 @@
+font=Comic Code 10
+width=350
+height=150
+margin=10
+padding=15
+border-size=2
+default-timeout=8000
+ignore-timeout=1
+max-visible=5
+layer=overlay
+
+include=~/.cache/wal/colors-mako

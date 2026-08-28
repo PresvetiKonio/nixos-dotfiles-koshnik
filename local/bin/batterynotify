@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Battery notifications using Mako directly via DBus (no notify-send required)
+
+export DISPLAY=:0
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus"
+
+WARNING_LEVEL=30
+EMPTY_FILE=/tmp/batteryempty
+FULL_FILE=/tmp/batteryfull
+
+BATTERY_INFO=$(acpi -b | grep "Battery 0")
+BATTERY_DISCHARGING=$(echo "$BATTERY_INFO" | grep -c "Discharging")
+BATTERY_LEVEL=$(echo "$BATTERY_INFO" | grep -P -o '[0-9]+(?=%)')
+
+# Reset notification flags when charging/discharging state changes
+if [ "$BATTERY_DISCHARGING" -eq 1 ] && [ -f "$FULL_FILE" ]; then
+  rm -f "$FULL_FILE"
+elif [ "$BATTERY_DISCHARGING" -eq 0 ] && [ -f "$EMPTY_FILE" ]; then
+  rm -f "$EMPTY_FILE"
+fi
+
+# Function to send a notification via DBus (Mako-compatible)
+send_notification() {
+  makoctl dismiss -a >/dev/null 2>&1
+
+  summary="$1"
+  body="$2"
+  urgency="${3:-normal}"
+
+  # Map urgency to numerical value
+  case "$urgency" in
+  low) urgency_level=0 ;;
+  normal) urgency_level=1 ;;
+  critical) urgency_level=2 ;;
+  *) urgency_level=1 ;;
+  esac
+
+  # Send notification through org.freedesktop.Notifications
+  gdbus call \
+    --session \
+    --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.Notify \
+    "battery-notify" 0 "" "$summary" "$body" \
+    [] {} $urgency_level 3000 >/dev/null
+}
+
+# Battery full
+if [ "$BATTERY_LEVEL" -gt 95 ] && [ "$BATTERY_DISCHARGING" -eq 0 ] && [ ! -f "$FULL_FILE" ]; then
+  send_notification "Battery Charged" "Battery is fully charged." normal
+  touch "$FULL_FILE"
+
+# Battery low
+elif [ "$BATTERY_LEVEL" -le "$WARNING_LEVEL" ] && [ "$BATTERY_DISCHARGING" -eq 1 ] && [ ! -f "$EMPTY_FILE" ]; then
+  send_notification "Low Battery" "${BATTERY_LEVEL}% of battery remaining." critical
+  touch "$EMPTY_FILE"
+fi

@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Adjust microphone volume and show a single, updated Mako notification.
+
+MIC_SOURCE="alsa_input.pci-0000_00_1f.3.analog-stereo"
+
+send_notification() {
+  volume=$(pamixer --source "$MIC_SOURCE" --get-volume)
+  # Dismiss previous notification before showing the new one
+  makoctl dismiss -a >/dev/null 2>&1
+  notify-send -a "changemicvol" -u low -h int:value:"$volume" "Mic: ${volume}%"
+}
+
+case "$1" in
+up)
+  pamixer --source "$MIC_SOURCE" -u
+  pamixer --source "$MIC_SOURCE" -i 5 --allow-boost
+  send_notification
+  ;;
+down)
+  pamixer --source "$MIC_SOURCE" -u
+  pamixer --source "$MIC_SOURCE" -d 5 --allow-boost
+  send_notification
+  ;;
+mute)
+  pamixer --source "$MIC_SOURCE" -t
+  if pamixer --source "$MIC_SOURCE" --get-mute | grep -q true; then
+    makoctl dismiss -a >/dev/null 2>&1
+    notify-send -a "changemicvol" -u low "Mic Muted"
+  else
+    send_notification
+  fi
+  ;;
+esac

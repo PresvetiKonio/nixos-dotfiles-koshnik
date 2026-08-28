@@ -1,0 +1,22 @@
+#! /bin/sh
+output="$(date '+/home/vladko/pictures/screenshots/%Y-%m-%d-%T-screenshot.png')"
+
+case "$1" in
+	"select")
+		region=$(slurp) || exit
+		grim -g "$region" "$output" || exit
+		;;
+	"window")
+		# Grim and slurp do not directly support "focused window" screenshots.
+		# Use `swaymsg` to get the focused window geometry (for Sway users).
+		geometry=$(swaymsg -t get_tree | jq -r '.. | select(.focused? == true) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')
+		[ -z "$geometry" ] && exit
+		grim -g "$geometry" "$output" || exit
+		;;
+	*)
+		grim "$output" || exit
+		;;
+esac
+
+notify-send "Screenshot taken." "Saved to $output"
+

@@ -1,0 +1,21 @@
+#! /bin/sh
+output="/tmp/$(date '+%F_%T').png"
+
+case "$1" in
+	"select")
+		region=$(slurp) || exit
+		grim -g "$region" "$output" || exit
+		;;
+	"window")
+		geometry=$(swaymsg -t get_tree | jq -r '.. | select(.focused? == true) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')
+		[ -z "$geometry" ] && exit
+		grim -g "$geometry" "$output" || exit
+		;;
+	*)
+		grim "$output" || exit
+		;;
+esac
+
+# Copy the screenshot to the clipboard
+wl-copy < "$output"
+

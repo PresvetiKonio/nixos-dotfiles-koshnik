@@ -1,0 +1,13 @@
+background-color={background}
+text-color={foreground}
+border-color={color4}
+
+[urgency=low]
+border-color={color8}
+
+[urgency=normal]
+border-color={color4}
+
+[urgency=critical]
+border-color={color1}
+text-color={color1}

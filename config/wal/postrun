@@ -1,0 +1,11 @@
+#!/bin/sh
+swaymsg reload
+#kitty @ --to unix:/tmp/kitty set-colors -a ~/.cache/wal/colors-kitty.conf
+#!/bin/sh
+
+for sock in /tmp/kitty-*; do
+    kitty @ --to unix:"$sock" set-colors -a ~/.cache/wal/colors-kitty.conf
+done
+
+pywalfox update
+makoctl reload

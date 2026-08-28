@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Ensure the program to launch is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <program>"
+    exit 1
+fi
+
+# Get the current focused window ID and its floating state
+focused_window=$(swaymsg -t get_tree | jq -r '.. | select(.focused?) | .id')
+floating_state=$(swaymsg -t get_tree | jq -r '.. | select(.focused?) | .floating')
+
+# Launch the new program
+"$@" &
+
+# Wait for the new window to appear
+new_window=""
+while [ -z "$new_window" ]; do
+    # Check for any newly created window
+    new_window=$(swaymsg -t get_tree | jq -r '
+        .. | select(.pid == '"$!"')? | .id' | head -n 1)
+    sleep 0.1
+done
+
+# Hide the old focused window
+swaymsg "[con_id=$focused_window]" move scratchpad
+
+# Wait for the launched program to exit
+wait $!
+
+# Restore the old window
+swaymsg "[con_id=$focused_window]" scratchpad show
+swaymsg "[con_id=$focused_window]" focus
+
+# Reset the terminal's floating state
+if [ "$floating_state" == "on" ]; then
+    swaymsg "[con_id=$focused_window]" floating enable
+else
+    swaymsg "[con_id=$focused_window]" floating disable
+fi
+
