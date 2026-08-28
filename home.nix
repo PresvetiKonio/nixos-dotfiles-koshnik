@@ -210,7 +210,7 @@ in
     librewolf-bin
     firefox
     qutebrowser
-    brave
+    brave-origin
 
     pywalfox-native
 
