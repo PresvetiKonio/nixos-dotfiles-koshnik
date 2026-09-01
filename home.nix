@@ -100,6 +100,28 @@ in
   home.file.".local/bin".source = local/bin;
   home.file.".local/share/fonts".source = local/fonts;
 
+  # in home.nix
+
+  systemd.user.services.taildrop-receive = {
+    Unit = {
+      Description = "Receive Taildrop files automatically";
+      After = [ "network-online.target" ];
+    };
+
+    Service = {
+      ExecStart = "${pkgs.tailscale}/bin/tailscale file get --loop --verbose --conflict=rename %h/taildrops";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+  };
+
+  # make sure the destination folder exists
+  home.file."taildrops/.keep".text = "";
+
   fonts.fontconfig.enable = true;
 
   gtk = {
